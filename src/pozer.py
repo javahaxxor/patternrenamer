@@ -1,7 +1,31 @@
 ''' http://python.org/dev/peps/pep-0263/
-# coding: utf-8
-Created on Jun 1, 2012
-Copyright adrian@javaguru.org
+encoding: utf-8
+Pattern Renamer
+This application renames and organizes files imported from iPhones or Nikon cameras.
+It can be easily extended to support other types of imports. The purpose of the 
+application is to rename files from their original names, e.g. IMG_123.JPG to something
+easier to relate to, as a date. The files will be named according to the date of creation
+plus the name of the folder they are stored in. This makes it easier to catalog the files,
+without having several hundred files named exactly the same on your drive. In case of a 
+drive failure, individual file naming could come in handy, but it's also easier to know 
+from which album this particular photo is.
+
+Copyright 2012 Adrian Bastholm adrian@javaguru.org
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 '''
 import os, sys, locale, re, shutil
 
@@ -22,16 +46,27 @@ print(locale.getlocale())
 print("\n")
 
 reallyDo = False 
+#iPhone saves as JPG and MOV 
+handledExtensions = set([".JPG", ".MOV"])
+#Nikon and iPhone file names handled by default. Add patterns here to extend
+handledPatterns = set(["DSC","CSC","IMG"])
 
 def getBaseDirName(path):
     return os.path.basename(os.path.abspath(path))
 
-def isJpg(path):
+def isHandledType(path):
     (name,ext) = os.path.splitext(path)
-    if ext.upper() == ".JPG":
+    if ext.upper() in handledExtensions:
         return True
     else:
         return False
+
+def getMediaPrefix(path):
+    if '.' in path:
+        (name,ext) = os.path.splitext(path)
+        return name[0:3]
+    else:
+        return None
     
 ''' Find JPG files not already renamed to yyyy-mm-dd pattern '''
 def match(path):
@@ -41,7 +76,10 @@ def match(path):
         print("Path date pattern match : " + path)
         return False
     else:
-        return True
+        if path[0:3] in handledPatterns:
+            return True
+        else:
+            return False
 
 def traverse (targetDir):
     currentDir = targetDir
@@ -51,8 +89,8 @@ def traverse (targetDir):
             print("Traversing " + os.path.join(targetDir,entry))
             traverse(os.path.join(targetDir,entry))
         else:
-            if os.path.isfile(os.path.join(targetDir,entry)) and isJpg(entry) and match(entry) and not match(getBaseDirName(targetDir)):
-                newFileName = getBaseDirName(currentDir) + entry.lstrip("DSC")
+            if os.path.isfile(os.path.join(targetDir,entry)) and isHandledType(entry) and match(entry) and not match(getBaseDirName(targetDir)):
+                newFileName = getBaseDirName(currentDir) + entry.lstrip(getMediaPrefix(entry))               
 
                 if reallyDo and os.access(targetDir, os.W_OK) and os.access(os.path.join(targetDir,entry), os.W_OK):
                     try:
@@ -61,8 +99,8 @@ def traverse (targetDir):
                     except IOError:
                         print("IOERROR " + IOError.__cause__)
                     
-            else:
-                print("Skipping : " + os.path.abspath(os.path.join(getBaseDirName(currentDir),entry)))
+            #else:
+                #print("Skipping : " + os.path.abspath(os.path.join(getBaseDirName(currentDir),entry)))
     print("\n-- Directory change --")
 
 if len(sys.argv) < 3:
@@ -82,4 +120,5 @@ if len(sys.argv) == 3:
         
 print("\nDone!")
 
-
+'''TODO: GPL licens
+'''
