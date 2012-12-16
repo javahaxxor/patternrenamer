@@ -27,7 +27,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 '''
-import os, sys, locale, re, shutil
+import os, sys, locale, re, shutil, time, datetime
+
 
 if __name__ == '__main__':
     pass
@@ -45,7 +46,8 @@ print(locale.getlocale())
 #print('\u0061\u030a')
 print("\n")
 
-reallyDo = False 
+reallyDo = False
+method = "ctime"
 #iPhone saves as JPG and MOV 
 handledExtensions = set([".JPG", ".MOV"])
 #Nikon and iPhone file names handled by default. Add patterns here to extend
@@ -81,6 +83,10 @@ def match(path):
         else:
             return False
 
+def getCreationTime(filename):
+    time = os.path.getctime(filename)
+    return datetime.date.fromtimestamp(time)
+
 def traverse (targetDir):
     currentDir = targetDir
     dirs = os.listdir(targetDir)
@@ -90,8 +96,11 @@ def traverse (targetDir):
             traverse(os.path.join(targetDir,entry))
         else:
             if os.path.isfile(os.path.join(targetDir,entry)) and isHandledType(entry) and match(entry) and not match(getBaseDirName(targetDir)):
-                newFileName = getBaseDirName(currentDir) + entry.lstrip(getMediaPrefix(entry))               
-
+                if method == "ctime":
+                    newFileName = str(getCreationTime(os.path.join(targetDir,entry))) + entry.lstrip(getMediaPrefix(entry))
+                elif method == "parent":
+                    newFileName = getBaseDirName(currentDir) + entry.lstrip(getMediaPrefix(entry))
+                
                 if reallyDo and os.access(targetDir, os.W_OK) and os.access(os.path.join(targetDir,entry), os.W_OK):
                     try:
                         print("Moving" + " " + os.path.abspath(os.path.join(targetDir,entry)) + " to\t\t new file: " +  os.path.abspath(os.path.join(targetDir,newFileName)))
@@ -104,9 +113,9 @@ def traverse (targetDir):
     print("\n-- Directory change --")
 
 if len(sys.argv) < 3:
-    print("Synopsis: prenamer <target dir> <--really> . Without --really it's doing a dry run (simulation)\n")
+    print("Synopsis: prenamer <target dir> <--really> <--method>. Without --really it's doing a dry run (simulation)\n")
 
-if len(sys.argv) == 3:
+if len(sys.argv) == 4:
     targetDir = sys.argv[1]
     if not os.path.exists(targetDir) or not os.path.isdir(targetDir) or not os.access(targetDir, os.W_OK) :
         print("I/O Error: " + targetDir)
@@ -115,7 +124,7 @@ if len(sys.argv) == 3:
         reallyDo = True
         traverse(targetDir)
     else:
-        print("Synopsis: prenamer <target dir> <--really> . Without --really it's doing a dry run (simulation)\n")
+        print("Synopsis: prenamer <target dir> <--really> <--method>. Without --really it's doing a dry run (simulation)\n")
         sys.exit()
         
 print("\nDone!")
