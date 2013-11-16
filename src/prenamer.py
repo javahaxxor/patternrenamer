@@ -116,7 +116,7 @@ try:
     print('\u00e5')
     print('\u0061\u030a')
 except UnicodeEncodeError:
-    print("Unicode encoding error. Set LANG in .bashrc")
+    print("Unicode encoding error. Set LANG=sv_SE.utf-8 and PYTHONIOENCODING=utf-8 in .bashrc or .bash_profile")
     exit(1)
 print("\n")
 
