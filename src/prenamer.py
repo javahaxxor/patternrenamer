@@ -1,3 +1,4 @@
+#!/usr/bin/python
 ''' http://python.org/dev/peps/pep-0263/
 encoding: utf-8
 Pattern Renamer
@@ -29,30 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 '''
 import os, sys, locale, re, shutil, time, datetime
 
-
-if __name__ == '__main__':
-    pass
-
-print("Pattern renamer application")
-
-
-locale.setlocale(locale.LC_ALL,"sv_SE.UTF-8")
-print("Encoding: " + sys.stdout.encoding)
-print(sys.stdout)
-print([(k, os.environ[k]) for k in os.environ if k.startswith('LC')])
-print([(k, os.environ[k]) for k in os.environ if k.startswith('LANG')])
-print(locale.getlocale())
-#print('\u00e5')
-#print('\u0061\u030a')
-print("\n")
-
-reallyDo = False
-method = "ctime"
-#iPhone saves as JPG and MOV 
-handledExtensions = set([".JPG", ".MOV"])
-#Nikon and iPhone file names handled by default. Add patterns here to extend
-handledPatterns = set(["DSC","CSC","IMG"])
-
 def getBaseDirName(path):
     return os.path.basename(os.path.abspath(path))
 
@@ -83,6 +60,13 @@ def match(path):
         else:
             return False
 
+def getMethod():
+    try:
+        methodArg = sys.argv[3]
+    except:
+        methodArg = "--parent"
+    return methodArg[2:]
+
 def getCreationTime(filename):
     time = os.path.getctime(filename)
     return datetime.date.fromtimestamp(time)
@@ -112,10 +96,42 @@ def traverse (targetDir):
                 #print("Skipping : " + os.path.abspath(os.path.join(getBaseDirName(currentDir),entry)))
     print("\n-- Directory change --")
 
+
+
+if __name__ == '__main__':
+    pass
+
+print("Pattern renamer application")
+
+locale.setlocale(locale.LC_ALL,"sv_SE.UTF-8")
+locale.setlocale(locale.LC_CTYPE, "sv_SE.UTF-8")
+print("STDOUT Encoding: " + sys.stdout.encoding)
+print("STDIN Encoding: " + sys.stdin.encoding)
+
+print(sys.stdout)
+print([(k, os.environ[k]) for k in os.environ if k.startswith('LC')])
+print([(k, os.environ[k]) for k in os.environ if k.startswith('LANG')])
+print("Locale: " + repr(locale.getlocale()))
+try:
+    print('\u00e5')
+    print('\u0061\u030a')
+except UnicodeEncodeError:
+    print("Unicode encoding error. Set LANG in .bashrc")
+    exit(1)
+print("\n")
+
+reallyDo = False
+method = getMethod()
+#iPhone saves as JPG and MOV 
+handledExtensions = set([".JPG", ".MOV"])
+#Nikon and iPhone file names handled by default. Add patterns here to extend
+handledPatterns = set(["DSC","CSC","IMG"])
+
 if len(sys.argv) < 3:
     print("Synopsis: prenamer <target dir> <--really> <--method>. Without --really it's doing a dry run (simulation)\n")
 
-if len(sys.argv) == 4:
+if len(sys.argv) <= 4:
+    getMethod()
     targetDir = sys.argv[1]
     if not os.path.exists(targetDir) or not os.path.isdir(targetDir) or not os.access(targetDir, os.W_OK) :
         print("I/O Error: " + targetDir)
@@ -125,7 +141,14 @@ if len(sys.argv) == 4:
         traverse(targetDir)
     else:
         print("Synopsis: prenamer <target dir> <--really> <--method>. Without --really it's doing a dry run (simulation)\n")
-        sys.exit()
+        print("set export LANG=sv_SE.utf-8 in .bashrc")
+        print("Example: prenamer MyFiles --really --ctime|parent")
+        traverse(targetDir)
+    
+else:
+    print("Synopsis: prenamer <target dir> <--really> <--method>. Without --really it's doing a dry run (simulation)\n")
+    print("Example: prenamer MyFiles --really --ctime|parent")
+    sys.exit()
         
 print("\nDone!")
 
