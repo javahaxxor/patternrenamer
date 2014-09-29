@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.4
 ''' http://python.org/dev/peps/pep-0263/
 encoding: utf-8
 Pattern Renamer
@@ -76,8 +76,8 @@ def traverse (targetDir):
     dirs = os.listdir(targetDir)
     for entry in dirs:
         if os.path.isdir(os.path.join(currentDir,entry)):
-            print("Traversing " + os.path.join(targetDir,entry))
-            traverse(os.path.join(targetDir,entry))
+            '''print("Checking " + os.path.join(targetDir,entry))'''
+            traverse(os.path.join(targetDir, entry))
         else:
             if os.path.isfile(os.path.join(targetDir,entry)) and isHandledType(entry) and match(entry) and not match(getBaseDirName(targetDir)):
                 if method == "ctime":
@@ -128,12 +128,16 @@ handledExtensions = set([".JPG", ".MOV"])
 handledPatterns = set(["DSC","CSC","IMG"])
 
 if len(sys.argv) < 3:
-    print("Synopsis: prenamer <target dir> <--really> <--method>. Without --really it's doing a dry run (simulation)\n")
-
-if len(sys.argv) <= 4:
+    reallyDo = False
     getMethod()
     targetDir = sys.argv[1]
-    if not os.path.exists(targetDir) or not os.path.isdir(targetDir) or not os.access(targetDir, os.W_OK) :
+    traverse(targetDir)
+    print("\nSynopsis: prenamer <target dir> <--really> <--method>. Without --really it's doing a dry run (simulation)\n")
+
+elif len(sys.argv) <= 4:
+    getMethod()
+    targetDir = sys.argv[1]
+    if not os.path.exists(targetDir) or not os.path.isdir(targetDir) or not os.access(targetDir, os.W_OK):
         print("I/O Error: " + targetDir)
         sys.exit()
     if sys.argv[2] == "--really":
